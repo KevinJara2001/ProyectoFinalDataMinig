@@ -1,7 +1,6 @@
 import streamlit as st
-st.title('Bienvenido al Dashboard de la Notaría')
-st.markdown("""
-Este panel presenta visualizaciones interactivas y predicciones sobre la demanda de servicios notariales usando Machine Learning.
 
-Navega por el menú lateral para comenzar.
-""")
+st.set_page_config(page_title="Dashboard Notaría", layout="wide")
+st.title("📊 Dashboard de Predicción de Servicios Notariales")
+st.markdown("---")
+st.write("Selecciona una página en el menú lateral para explorar datos, modelos y predicciones.")
