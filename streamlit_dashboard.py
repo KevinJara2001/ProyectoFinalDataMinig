@@ -10,7 +10,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import gc
 
 st.set_page_config(page_title="Dashboard Notaría", layout="wide")
-st.title("Dashboard de Predicción de Servicios Notarial")
+st.title("Dashboard de Predicción de Servicios Notariales")
 st.markdown("---")
 
 MESES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -49,15 +49,16 @@ modelo_rf, modelo_dt, X_test, y_test, pred_rf, pred_dt, X, y = entrenar_modelos(
 
 st.sidebar.header("Opciones de visualización")
 seccion = st.sidebar.radio("Ir a sección:", [
-    "Exploración de datos",
+    "Exploración de datos - Parte 1",
+    "Exploración de datos - Parte 2",
     "Entrenamiento y evaluación de modelos",
     "Predicción para 2024",
     "Predicción para 2025"
 ])
 
-if seccion == "Exploración de datos":
-    st.subheader("Exploración Interactiva de Datos")
-    tabs = st.tabs(["Demanda diaria", "Por día de semana", "Por mes", "Demanda anual", "Real vs Predicho por Día", "Real vs Predicho por Mes", "Servicio más demandado"])
+if seccion == "Exploración de datos - Parte 1":
+    st.subheader("Exploración de Datos - Parte 1")
+    tabs = st.tabs(["Demanda diaria", "Por día de semana", "Por mes", "Demanda anual"])
 
     with tabs[0]:
         st.markdown("### Distribución diaria de demanda")
@@ -87,22 +88,27 @@ if seccion == "Exploración de datos":
         sns.barplot(data=anual, x="anio", y="demanda_diaria", ax=ax)
         st.pyplot(fig)
 
-    with tabs[4]:
+if seccion == "Exploración de datos - Parte 2":
+    st.subheader("Exploración de Datos - Parte 2")
+    tabs = st.tabs(["Real vs Predicho por Día", "Real vs Predicho por Mes", "Servicio más demandado"])
+
+    df["demanda_predicha"] = modelo_rf.predict(X)
+
+    with tabs[0]:
         st.markdown("### Comparación real vs predicho por día")
-        df["demanda_predicha"] = modelo_rf.predict(X)
         por_dia = df.groupby("dia_nombre")[["demanda_diaria", "demanda_predicha"]].sum().reindex(DIAS_ES).reset_index()
         fig, ax = plt.subplots(figsize=(10, 4), dpi=72)
         por_dia.plot(kind="bar", x="dia_nombre", ax=ax)
         st.pyplot(fig)
 
-    with tabs[5]:
+    with tabs[1]:
         st.markdown("### Comparación real vs predicho por mes")
         por_mes = df.groupby("mes")[["demanda_diaria", "demanda_predicha"]].sum().reindex(range(1, 13)).reset_index()
         fig, ax = plt.subplots(figsize=(10, 4), dpi=72)
         por_mes.plot(kind="bar", x="mes", ax=ax)
         st.pyplot(fig)
 
-    with tabs[6]:
+    with tabs[2]:
         st.markdown("### Servicio más demandado por mes")
         top = df.groupby(["mes_nombre", "tipo_servicio"]).agg({"demanda_diaria": "sum"}).reset_index()
         top = top.loc[top.groupby("mes_nombre")["demanda_diaria"].idxmax()]
