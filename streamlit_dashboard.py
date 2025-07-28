@@ -56,23 +56,60 @@ seccion = st.sidebar.radio("Ir a sección:", [
 ])
 
 if seccion == "Exploración de datos":
-    st.subheader("Distribución diaria de demanda")
-    fig, ax = plt.subplots(figsize=(10, 3), dpi=72)
-    sns.lineplot(data=df, x="fecha", y="demanda_diaria", ax=ax)
-    st.pyplot(fig)
+    st.subheader("Exploración Interactiva de Datos")
+    tabs = st.tabs(["Demanda diaria", "Por día de semana", "Por mes", "Demanda anual", "Real vs Predicho por Día", "Real vs Predicho por Mes", "Servicio más demandado"])
 
-    st.subheader("Demanda por día de la semana")
-    resumen = df.groupby("dia_nombre")["demanda_diaria"].mean().reindex(DIAS_ES).reset_index()
-    fig, ax = plt.subplots(figsize=(8, 3), dpi=72)
-    sns.barplot(data=resumen, x="dia_nombre", y="demanda_diaria", ax=ax)
-    st.pyplot(fig)
+    with tabs[0]:
+        st.markdown("### Distribución diaria de demanda")
+        fig, ax = plt.subplots(figsize=(10, 3), dpi=72)
+        sns.lineplot(data=df, x="fecha", y="demanda_diaria", ax=ax)
+        st.pyplot(fig)
 
-    st.subheader("Demanda mensual promedio")
-    resumen_m = df.groupby("mes_nombre")["demanda_diaria"].mean().reindex(MESES_ES).reset_index()
-    fig, ax = plt.subplots(figsize=(8, 3), dpi=72)
-    sns.barplot(data=resumen_m, x="mes_nombre", y="demanda_diaria", ax=ax)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
-    st.pyplot(fig)
+    with tabs[1]:
+        st.markdown("### Demanda por día de la semana")
+        resumen = df.groupby("dia_nombre")["demanda_diaria"].mean().reindex(DIAS_ES).reset_index()
+        fig, ax = plt.subplots(figsize=(8, 3), dpi=72)
+        sns.barplot(data=resumen, x="dia_nombre", y="demanda_diaria", ax=ax)
+        st.pyplot(fig)
+
+    with tabs[2]:
+        st.markdown("### Demanda mensual promedio")
+        resumen_m = df.groupby("mes_nombre")["demanda_diaria"].mean().reindex(MESES_ES).reset_index()
+        fig, ax = plt.subplots(figsize=(8, 3), dpi=72)
+        sns.barplot(data=resumen_m, x="mes_nombre", y="demanda_diaria", ax=ax)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+        st.pyplot(fig)
+
+    with tabs[3]:
+        st.markdown("### Demanda promedio anual")
+        anual = df.groupby("anio")["demanda_diaria"].mean().reset_index()
+        fig, ax = plt.subplots(figsize=(8, 3), dpi=72)
+        sns.barplot(data=anual, x="anio", y="demanda_diaria", ax=ax)
+        st.pyplot(fig)
+
+    with tabs[4]:
+        st.markdown("### Comparación real vs predicho por día")
+        df["demanda_predicha"] = modelo_rf.predict(X)
+        por_dia = df.groupby("dia_nombre")[["demanda_diaria", "demanda_predicha"]].sum().reindex(DIAS_ES).reset_index()
+        fig, ax = plt.subplots(figsize=(10, 4), dpi=72)
+        por_dia.plot(kind="bar", x="dia_nombre", ax=ax)
+        st.pyplot(fig)
+
+    with tabs[5]:
+        st.markdown("### Comparación real vs predicho por mes")
+        por_mes = df.groupby("mes")[["demanda_diaria", "demanda_predicha"]].sum().reindex(range(1, 13)).reset_index()
+        fig, ax = plt.subplots(figsize=(10, 4), dpi=72)
+        por_mes.plot(kind="bar", x="mes", ax=ax)
+        st.pyplot(fig)
+
+    with tabs[6]:
+        st.markdown("### Servicio más demandado por mes")
+        top = df.groupby(["mes_nombre", "tipo_servicio"]).agg({"demanda_diaria": "sum"}).reset_index()
+        top = top.loc[top.groupby("mes_nombre")["demanda_diaria"].idxmax()]
+        fig, ax = plt.subplots(figsize=(10, 4), dpi=72)
+        sns.barplot(data=top, x="mes_nombre", y="demanda_diaria", hue="tipo_servicio", ax=ax)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+        st.pyplot(fig)
 
 elif seccion == "Entrenamiento y evaluación de modelos":
     st.subheader("Entrenamiento de modelos")
